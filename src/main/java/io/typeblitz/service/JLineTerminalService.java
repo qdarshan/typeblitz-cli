@@ -15,6 +15,7 @@ public class JLineTerminalService implements TerminalService {
     private static final Logger log = LoggerFactory.getLogger(JLineTerminalService.class);
     private Terminal terminal;
     private NonBlockingReader reader;
+    private boolean firstFrame = true;
 
     public static final int READ_EXPIRED = -2;
 
@@ -29,6 +30,7 @@ public class JLineTerminalService implements TerminalService {
             this.terminal.enterRawMode();
             this.reader = terminal.reader();
             this.terminal.puts(InfoCmp.Capability.cursor_invisible);
+            this.firstFrame = true;
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to initialize the terminal.", e);
@@ -47,17 +49,26 @@ public class JLineTerminalService implements TerminalService {
 
     @Override
     public void renderFrame(TypingSession session) {
+        if (!firstFrame) {
+            terminal.puts(InfoCmp.Capability.cursor_up);
+        }
         terminal.writer().print("\r");
+        firstFrame = false;
 
         String targetText = session.getTargetText();
         int currentIndex = session.getCurrentIndex();
         boolean[] correctOnFirstAttempt = session.getCorrectOnFirstAttempt();
         int[] errorsPerPosition = session.getErrorsPerPosition();
 
-        AttributedStringBuilder attributedStringBuilder = new AttributedStringBuilder();
-
         long timeLeft = session.getTimeLimitInMillis() / 1000;
-        attributedStringBuilder.append(String.format("[Time: %ds] ", timeLeft));
+        int wpm = session.calculateWPM();
+        int accuracy = session.calculateAccuracy();
+
+        terminal.writer().print(String.format("[Time: %ds] [WPM: %d] [Accuracy: %d%%]", timeLeft, wpm, accuracy));
+        terminal.puts(InfoCmp.Capability.clr_eol);
+        terminal.writer().print("\n");
+
+        AttributedStringBuilder attributedStringBuilder = new AttributedStringBuilder();
 
         for (int i = 0; i < targetText.length(); i++) {
             char expectedChar = targetText.charAt(i);
@@ -65,11 +76,11 @@ public class JLineTerminalService implements TerminalService {
                 if (correctOnFirstAttempt[i]) {
                     attributedStringBuilder.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN));
                 } else {
-                    attributedStringBuilder.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW));
+                    attributedStringBuilder.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.RED));
                 }
             } else if (i == currentIndex) {
                 if (errorsPerPosition[i] > 0) {
-                    attributedStringBuilder.style(AttributedStyle.BOLD.foreground(AttributedStyle.RED).underline().blink());
+                    attributedStringBuilder.style(AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW).underline().blink());
                 } else {
                     attributedStringBuilder.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE).underline().blink());
                 }

@@ -21,7 +21,7 @@ public class TypingSession {
     }
 
     public void handleInput(int input) {
-        if (input == 127 || input == 8 || Character.isISOControl(input)) {
+        if (input == 127 || input == 8 || (Character.isISOControl(input) && input != '\n')) {
             return;
         }
 
@@ -53,6 +53,16 @@ public class TypingSession {
             return 100;
         }
         return (int) ((inputBuffer.length() / (double) totalAttempts) * 100);
+    }
+
+    public int calculateWPM() {
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        if (elapsedTime == 0) {
+            return 0;
+        }
+        double minutes = elapsedTime / 60000.0;
+        double words = inputBuffer.length() / 5.0;
+        return (int) (words / minutes);
     }
 
     public long getTimeLimitInMillis() {

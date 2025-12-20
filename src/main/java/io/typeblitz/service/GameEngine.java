@@ -19,7 +19,7 @@ public class GameEngine {
             while (!session.isFinished()) {
                 terminalService.renderFrame(session);
 
-                int input = terminalService.readInput(10);
+                int input = terminalService.readInput(100);
 
                 if (input == JLineTerminalService.READ_EXPIRED) {
                     continue;
@@ -50,6 +50,7 @@ public class GameEngine {
             terminalService.printLine("Completed!");
         }
 
+        terminalService.printLine("WPM: " + session.calculateWPM());
         terminalService.printLine("Accuracy: " + session.calculateAccuracy() + "%");
     }
 }

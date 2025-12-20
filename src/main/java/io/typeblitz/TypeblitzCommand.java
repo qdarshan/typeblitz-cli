@@ -1,7 +1,6 @@
 package io.typeblitz;
 
 import io.micronaut.configuration.picocli.PicocliRunner;
-
 import io.typeblitz.commands.GreetCommand;
 import io.typeblitz.commands.StartCommand;
 import picocli.CommandLine.Command;
@@ -15,7 +14,7 @@ public class TypeblitzCommand implements Runnable {
     @Command
     String greet;
 
-    static void main(String[] args) throws Exception {
+    static void main(String[] args) {
         PicocliRunner.run(TypeblitzCommand.class, args);
     }
 
