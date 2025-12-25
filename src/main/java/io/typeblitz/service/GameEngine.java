@@ -25,7 +25,8 @@ public class GameEngine {
                     continue;
                 }
 
-                if (input == 3) {
+                if (input == 3 || input == 4) {
+                    terminalService.printLine("\nExiting session early...");
                     break;
                 }
                 session.handleInput(input);

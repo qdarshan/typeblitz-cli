@@ -1,6 +1,7 @@
 package io.typeblitz.service;
 
 import jakarta.inject.Singleton;
+import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.*;
@@ -15,7 +16,6 @@ public class JLineTerminalService implements TerminalService {
     private static final Logger log = LoggerFactory.getLogger(JLineTerminalService.class);
     private Terminal terminal;
     private NonBlockingReader reader;
-    private boolean firstFrame = true;
 
     public static final int READ_EXPIRED = -2;
 
@@ -28,9 +28,13 @@ public class JLineTerminalService implements TerminalService {
                     .build();
 
             this.terminal.enterRawMode();
+
+            Attributes attributes = terminal.getAttributes();
+            attributes.setLocalFlag(Attributes.LocalFlag.ISIG, false);
+            this.terminal.setAttributes(attributes);
+
             this.reader = terminal.reader();
             this.terminal.puts(InfoCmp.Capability.cursor_invisible);
-            this.firstFrame = true;
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to initialize the terminal.", e);
@@ -46,14 +50,9 @@ public class JLineTerminalService implements TerminalService {
             throw new RuntimeException("Error reading the input.", e);
         }
     }
-
     @Override
     public void renderFrame(TypingSession session) {
-        if (!firstFrame) {
-            terminal.puts(InfoCmp.Capability.cursor_up);
-        }
-        terminal.writer().print("\r");
-        firstFrame = false;
+        terminal.puts(InfoCmp.Capability.cursor_home);
 
         String targetText = session.getTargetText();
         int currentIndex = session.getCurrentIndex();
@@ -82,16 +81,16 @@ public class JLineTerminalService implements TerminalService {
                 if (errorsPerPosition[i] > 0) {
                     attributedStringBuilder.style(AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW).underline().blink());
                 } else {
-                    attributedStringBuilder.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE).underline().blink());
+                    attributedStringBuilder.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE).underline());
                 }
-            }
-            else {
+            } else {
                 attributedStringBuilder.style(AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT).faint());
             }
             attributedStringBuilder.append(expectedChar);
         }
+
         terminal.writer().print(attributedStringBuilder.toAnsi(terminal));
-        terminal.puts(InfoCmp.Capability.clr_eol);
+        terminal.puts(InfoCmp.Capability.clr_eos);
         terminal.flush();
     }
 

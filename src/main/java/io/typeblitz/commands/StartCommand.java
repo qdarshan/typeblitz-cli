@@ -23,6 +23,13 @@ public class StartCommand implements Runnable {
     int timeSeconds;
 
     @CommandLine.Option(
+            names = {"-w", "--word"},
+            description = "Number of words",
+            defaultValue = "100")
+    int wordsLimit;
+
+
+    @CommandLine.Option(
             names = {"-d", "--difficulty"},
             description = "Difficulty level: ${COMPLETION-CANDIDATES}",
             defaultValue = "EASY",
@@ -41,8 +48,9 @@ public class StartCommand implements Runnable {
     public void run() {
 
         TextProvider textProvider = textProviderFactory.getTextProvider(difficulty);
+        long estimatedCharLength = wordsLimit * 6L;
 
-        String sampleText = textProvider.generateText(100);
+        String sampleText = textProvider.generateText(estimatedCharLength);
         gameEngine.startSession(sampleText, timeSeconds * 1000L);
     }
 }

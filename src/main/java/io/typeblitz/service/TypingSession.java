@@ -57,9 +57,7 @@ public class TypingSession {
 
     public int calculateWPM() {
         long elapsedTime = System.currentTimeMillis() - startTime;
-        if (elapsedTime == 0) {
-            return 0;
-        }
+        if (elapsedTime < 1000) return 0;
         double minutes = elapsedTime / 60000.0;
         double words = inputBuffer.length() / 5.0;
         return (int) (words / minutes);
